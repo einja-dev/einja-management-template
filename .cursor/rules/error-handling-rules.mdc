@@ -1,0 +1,188 @@
+---
+description: hono エラーハンドリング
+globs: src/server,src/server/*
+alwaysApply: false
+---
+# エラーハンドリングのプロジェクトルール
+## 概要
+
+本プロジェクトでは、エラーハンドリングに「Result モナド」パターンを採用しています。このドキュメントでは、各層でのエラーハンドリングの責務と実装方法について説明します。
+
+## Result モナドとは
+
+Result モナドは、処理の結果を「成功」または「失敗」として表現するデータ型です。TypeScript では以下のように定義されています：
+
+```typescript
+// 成功時の結果
+type Success<T> = {
+  isSuccess: true;
+  value: T;
+};
+
+// 失敗時の結果
+type Failure<E> = {
+  isSuccess: false;
+  error: E;
+};
+
+// Result型（成功または失敗）
+type Result<T, E> = Success<T> | Failure<E>;
+```
+
+## 各層の責務
+
+### 1. リポジトリ層（データアクセス層）
+
+リポジトリ層は、データベースアクセスに関するエラーを捕捉し、適切な `Result` オブジェクトに変換する責務を持ちます。
+
+**実装ルール**:
+
+- リポジトリのメソッドは `Promise<Result<T, ApplicationError>>` を返すこと
+- データベース操作は try-catch ブロックで囲み、例外を捕捉すること
+- データが存在しない場合は `NOT_FOUND` エラーを返すこと
+- バリデーションエラーは `VALIDATION_ERROR` として返すこと
+- データベース固有のエラーは適切なアプリケーションエラーに変換すること
+
+**実装例**:
+
+```typescript
+async find(userId: string): Promise<Result<prettifiedTafProfile, ApplicationError>> {
+  if (!userId) {
+    return Result.failure(new ApplicationError(ERROR_CODES.VALIDATION_ERROR, 'userIdが指定されていません。'));
+  }
+
+  try {
+    const tafProfile = await prismaClient.tafProfile.findUnique({
+      where: { userId },
+      include: { TafEventRecord: true },
+    });
+
+    if (!tafProfile) {
+      return Result.failure(new ApplicationError(ERROR_CODES.NOT_FOUND, 'TAFプロフィールが見つかりませんでした。'));
+    }
+
+    return Result.success(convertToPrettifiedTafProfile(tafProfile));
+  } catch (error) {
+    return Result.failure(new ApplicationError(ERROR_CODES.SYSTEM_ERROR, 'TAFプロフィールの取得に失敗しました。'));
+  }
+}
+```
+
+### 2. ユースケース層（ビジネスロジック層）
+
+ユースケース層は、ビジネスロジックに関するバリデーションを行い、リポジトリから返された `Result` を適切に処理する責務を持ちます。
+
+**実装ルール**:
+
+- ユースケースのメソッドは `Promise<Result<T, ApplicationError>>` を返すこと
+- ビジネスルールに関するバリデーションを行い、エラーの場合は `Result.failure` を返すこと
+- リポジトリから返された `Result` は、必要に応じて `flatMap` や `map` を使って変換すること
+- 複数のリポジトリ操作を連鎖させる場合は、`flatMap` を使用すること
+
+**実装例**:
+
+```typescript
+export const getUserTafProfileByIdService = async (
+  userId: string
+): Promise<Result<prettifiedTafProfile, ApplicationError>> => {
+  if (!userId) {
+    return Result.failure(
+      new ApplicationError(ERROR_CODES.VALIDATION_ERROR, 'ユーザーIDが指定されていません。')
+    );
+  }
+
+  return await tafProfileRepository.find(userId);
+};
+
+export const postUserTafProfileService = async (
+  userId: string,
+  data: z.infer<typeof tafProfileMutationInputSchema>
+): Promise<Result<{ status: 'success' }, ApplicationError>> => {
+  if (!userId) {
+    return Result.failure(
+      new ApplicationError(ERROR_CODES.VALIDATION_ERROR, 'ユーザーIDが指定されていません。')
+    );
+  }
+
+  const result = await tafProfileRepository.create(userId, data);
+
+  return Result.flatMap(result, _ => {
+    return Result.success({ status: 'success' });
+  });
+};
+```
+
+### 3. プレゼンテーション層（API 層）
+
+プレゼンテーション層は、ユースケースから返された `Result` を適切な HTTP レスポンスに変換する責務を持ちます。
+
+**実装ルール**:
+
+- API 入力パラメータのバリデーションを行うこと（zValidator などを使用）
+  - その際にバリデーションエラーが起きた場合の返却値は、zValidatorの標準挙動に準拠して返却し、明示的なハンドリングは実装しないこと
+- ユースケースから返された `Result` を、`isSuccess` フラグに基づいて適切な HTTP レスポンスに変換すること
+- 成功時は `createSuccessResponse` を使用してレスポンスを生成すること
+- 失敗時は `createErrorResponse` を使用してエラーレスポンスを生成すること
+- レスポンスは `c.json` を使用して返すこと。日付型から文字列への変換はもその関数の内部処理に任せて、明示的な実装での変換は行わないこと
+
+**実装例**:
+
+```typescript
+.get('/:userId', zValidator('param', userIdSchema), async c => {
+  const { userId } = c.req.valid('param');
+  const result = await getUserTafProfileByIdService(userId);
+
+  if (result.isSuccess) {
+    const response = createSuccessResponse(result.value);
+    return c.json(response.data, response.status);
+  } else {
+    const errorResponse = createErrorResponse(result.error);
+    return c.json(errorResponse.error, errorResponse.status);
+  }
+})
+```
+
+## エラーコードとステータスコードのマッピング
+
+エラーコードと HTTP ステータスコードのマッピングは、`errorHandler.ts` で定義されています：
+
+```typescript
+export const ERROR_STATUS_MAP: Record<ApplicationErrorType, StatusCode> = {
+  VALIDATION_ERROR: 400,
+  NOT_FOUND: 404,
+  ALREADY_EXISTS: 409,
+  UNAUTHORIZED: 401,
+  SYSTEM_ERROR: 500,
+} as const;
+```
+
+## モナド操作の活用
+
+Result モナドは、以下の操作を提供しています：
+
+- `Result.success(value)`: 成功結果を生成
+- `Result.failure(error)`: 失敗結果を生成
+- `Result.map(result, fn)`: 成功時の値を変換
+- `Result.flatMap(result, fn)`: 成功時の値を別の Result に変換
+
+特に `flatMap` は、複数の操作を連鎖させる際に有用です。例えば：
+
+```typescript
+// ユーザーを取得し、そのプロフィールを更新する
+const result = await userRepository.findById(userId);
+return Result.flatMap(result, user => {
+  return profileRepository.update(user.id, profileData);
+});
+```
+
+## vitestのテストデータについて
+
+[mockUser.ts](mdc:picker-app/src/server/test/mocks/mockUser.ts)に基本的にmockデータを作成する関数を作成し、テストファイル側では関数を呼び出すだけにする
+
+## まとめ
+
+- infrastracture層: データアクセスエラーを Result モナドに変換
+- UseCase層: ビジネスロジックのバリデーションと Result モナドの処理
+- Presentation層: Result モナドを HTTP レスポンスに変換
+
+このパターンを一貫して適用することで、型安全なエラーハンドリングと明確なコードの意図を実現します。

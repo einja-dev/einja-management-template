@@ -1,0 +1,181 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# APIテストルール
+
+## Vitest
+VitestはVite公式の高速なユニットテスト・モック・カバレッジツールです。本プロジェクトではAPI層・ドメイン層・ユースケース層・プレゼンテーション層のテストに利用します。
+
+### 主な特徴・メリット
+- Viteと同じビルド基盤を利用し、テストの起動・実行が非常に高速
+- Jest互換API（describe, it, expect, vi など）で、Jest経験者もすぐに使える
+- TypeScriptとの親和性が高い（型推論・型チェックが強力）
+- モック・スナップショット・カバレッジ・UIテストなど多機能
+- ホットリロード対応でTDDや開発体験が良い
+
+### 環境変数
+- テスト時は`APP_ENV=test`とする
+- 環境変数の設定は`vite.config.ts`ファイルに記載されており、テスト実行時にこのファイルが読み込まれる
+
+
+## テストファイルの配置
+コロケーションパターンで配置する
+```
+src/
+└── server/
+    ├── application/
+    │   └── useCases/
+    │       └── {機能名}/
+    │           ├── UseCase.ts          # 実装
+    │           └── UseCase.test.ts     # テスト
+    ├── domain/
+    │   └── models/
+    │       └── {モデル名}/
+    │           ├── Model.ts            # 実装
+    │           └── Model.test.ts       # テスト
+    └── presentations/
+        └── {機能名}/
+            ├── index.ts                # 実装
+            └── index.test.ts           # テスト
+```
+
+### ファイル命名規則
+- 実装ファイルと同じディレクトリに配置
+- ファイル名は `{実装ファイル名}.test.ts`
+- インテグレーションテストは `{実装ファイル名}.integration.test.ts`
+
+## テストの構造
+
+### テストケースの分類
+```typescript
+describe('機能名', () => {
+  describe('正常系', () => {
+    it('期待する動作の説明', async () => {
+      // テストケース
+    });
+  });
+
+  describe('異常系', () => {
+    it('エラーケースの説明', async () => {
+      // テストケース
+    });
+  });
+});
+```
+
+### テストケースの命名
+- 正常系: 期待する動作を日本語で記述
+    - 例: `新規ユーザーの場合、会話を作成して応答を返すこと`
+- 異常系: エラーの種類と期待する動作を日本語で記述
+    - 例: `MongoDBとの接続エラー時にエラーをスローすること`
+
+## モック化のルール
+
+### 外部依存のモック
+- データベース接続
+- 外部APIリクエスト
+- 環境変数
+- 現在時刻
+
+```typescript
+// モックの例
+vi.mock(
+  '@/server/infrastructure/repositories/MongoLineMessageHistoryRepository',
+  () => ({
+    MongoLineMessageHistoryRepository: {
+      findByUserId: vi.fn(),
+      addMessage: vi.fn(),
+    },
+  }),
+);
+```
+
+### テストデータ
+- テストデータは各テストファイル内で定義
+- 共通のテストデータファクトリーや、テスト用共通ロジックは/src/server/tests内に配置
+- データは最小限の内容に留める
+
+## アサーション
+
+### 基本ルール
+- 1つのテストケースにつき、1つの機能をテスト
+- 複数の条件を確認する場合は、個別のテストケースに分割
+- エッジケースを必ずテスト
+- **テスト作成後は、必ずtestが通るかを確認**
+
+### アサーションの種類
+- 値の比較: `expect(result).toBe(expected)`
+- オブジェクトの比較: `expect(result).toEqual(expected)`
+- 関数呼び出しの確認: `expect(mockFn).toHaveBeenCalled()`
+- エラーの確認: `expect(promise).rejects.toThrow()`
+
+## APIエンドポイントのテスト
+
+### エンドポイントテストの構造
+```typescript
+describe('APIエンドポイント', () => {
+  describe('POST /api/webhook/line/{botId}', () => {
+    it('正常なリクエストの場合、200を返すこと', async () => {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-line-signature': 'test',
+        },
+        body: JSON.stringify({
+          events: [{
+            type: 'message',
+            message: { type: 'text', text: 'こんにちは' },
+            source: { userId: 'test-user' },
+            replyToken: 'test-token',
+          }],
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ status: 'ok' });
+    });
+  });
+});
+```
+
+### テストすべき項目
+1. 正常系
+    - 正常なリクエストに対する応答
+    - ペイロードの処理
+    - ヘッダーの検証
+
+2. 異常系
+    - 不正なリクエストボディ
+    - 必須ヘッダーの欠落
+    - 認証エラー
+    - バリデーションエラー
+
+3. エッジケース
+    - 空のペイロード
+    - 大きなペイロード
+    - 特殊文字を含むメッセージ
+
+## テストの実行
+
+### 実行コマンド
+```bash
+# 全てのテストを実行
+npm test
+
+# 特定のテストファイルを実行
+npm test path/to/test.ts
+
+# 監視モードで実行
+npm test -- --watch
+
+# カバレッジレポートを生成
+npm test -- --coverage
+```
+
+### CI/CD
+- プルリクエスト時に全テストを実行
+- カバレッジが80%未満の場合はビルドを失敗させる
+- テスト失敗時はマージを禁止

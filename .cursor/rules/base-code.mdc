@@ -1,0 +1,70 @@
+---
+description: コード規約 - コーディング規約とリファクタリング方針
+globs: ["src/**/*.ts", "src/**/*.tsx"]
+alwaysApply: true
+---
+# コード規約
+## ディレクトリ構造
+```
+src/
+├── app/              # Next.js App Router
+├── components/       # 共通コンポーネント
+├── lib/             # ユーティリティ関数
+├── styles/          # スタイル関連
+└── types/           # 型定義
+```
+
+## コーディング規約
+
+### 命名規則
+- ファイル名: kebab-case
+- コンポーネント名: PascalCase
+- 変数・関数名: camelCase
+- 定数: UPPER_SNAKE_CASE
+- 型・インターフェース: PascalCase
+
+### コードスタイル
+- インデント: 2スペース
+- セミコロン: 必須
+- クォート: シングルクォート
+- 行の長さ: 100文字以内
+- if文などの1行ブロックでも必ず中括弧（{}）を付けること（省略禁止）
+  - 例: NG → `if (user) return user;` / OK → `if (user) { return user; }`
+
+### importパス
+- 相対パス（`../../`）は使用禁止
+- `@/`を使用した絶対パスを使用
+  - 例: `import { Component } from '@/components/Component'`
+  - 例: `import { useHook } from '@/hooks/useHook'`
+
+### 型定義
+- 明示的な型アノテーションを使用
+- anyは使用禁止
+- インターフェースはIプレフィックスを使用
+- 型定義はtypesディレクトリに集約
+
+## ツール設定
+
+### TypeScript
+- strictモードを有効化
+- 型チェックはビルド時に実行
+- 型定義は可能な限り厳密に
+
+# 使用パッケージ一覧
+**パッケージを更新したらこの一覧を必ず更新することをCursorから提案してください**
+- TypeScript: 型安全な開発のためのメイン言語
+- Next.js: フロントエンド/SSR/ルーティング
+- React, react-dom: UIコンポーネント・SPA開発
+- Prisma (@prisma/client, prisma): ORM・DBマイグレーション・型生成
+- Vitest, @vitest/ui, @vitest/coverage-v8: ユニットテスト・モック・テストランナー
+- Vite: フロントエンド開発環境・ビルドツール
+- dotenv, dotenv-cli: 環境変数管理
+- Biome (@biomejs/biome): Lint/Format/型チェック統合ツール
+- Hono, @hono/node-server: APIサーバ・ミドルウェア
+- MongoDB, mongoose: NoSQLデータベース・ODM
+- @line/bot-sdk: LINE Messaging API連携
+- openai: OpenAI API連携
+- axios: HTTPクライアント
+- eslint, eslint-config-next: Lintルール
+- @types/*: 型定義パッケージ
+- その他: 必要に応じて各層で利用するパッケージを適宜追加

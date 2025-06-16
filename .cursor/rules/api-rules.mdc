@@ -1,0 +1,171 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# API開発ルール
+## ディレクトリ構成（1つ下の粒度の例・各階層の説明付き）
+
+```
+src/
+├── server/
+│   ├── domain/          # ドメイン層：ビジネスロジック・エンティティ・リポジトリ/サービスIF
+│   │   ├── models/        # ドメインモデル（エンティティ・値オブジェクト）
+│   │   ├── repositories/  # ドメインリポジトリインターフェース
+│   │   └── services/      # ドメインサービスインターフェース
+│   ├── application/     # アプリケーション層：ユースケース
+│   │   └── useCases/      # ユースケース実装
+│   ├── infrastructure/  # インフラ層: DB・外部サービス連携・マッパー
+│   │   ├── adapters/      # 外部サービス・DB接続ラッパー
+│   │   ├── repositories/  # ドメインリポジトリIFの実装（DBアクセス等）
+│   │   ├── prisma/        # Prisma関連（Client, Repository, schema, migrations）
+│   │   ├── mapper/        # 型変換の責務を担う（DB型・外部サービスの型 ⇔ ドメイン型）
+│   │   └── config/        # 環境変数・設定
+│   └── presentations/   # プレゼンテーション層: Honoアプリ（各botやWebhookのハンドラ）
+└── app/
+    └── api/             # Next.js App RouterのAPIエンドポイント
+```
+
+
+
+#### 原則
+- ドメイン層は外部の型に依存しない
+  - 外部の型をimportしない
+  - 外部の型を知らない
+- アプリケーション層（UseCase）は型変換を行わない
+  - 型変換はインフラ層のMapperに委譲
+  - ビジネスロジックに集中
+- インフラ層のAdapterは必要に応じてMapperを使用
+  - 外部サービスとの通信時に型変換
+  - DB操作時に型変換
+- 型変換のロジックはMapper層に集約
+  - 重複を避ける
+  - 一貫性を保つ
+  - テスト容易性を確保
+
+# API設計
+
+## RESTful API
+- リソースベースのURL設計
+- HTTPメソッドの適切な使用
+- ステータスコードの適切な使用
+
+## エンドポイント命名規則
+- 複数形の名詞を使用
+- 小文字のハイフン区切り
+- バージョン管理はURLに含める
+
+## リクエスト/レスポンス
+- JSON形式を使用
+- 日時はISO 8601形式
+- エラーレスポンスは統一フォーマット
+
+
+# HonoによるAPI実装ルール
+
+## 実装ルール
+- Honoの`app`インスタンスは`src/server/presentations/xxx/index.ts`で定義し、**メソッドチェーン形式で記述すること**
+- APIエンドポイント（`src/app/api/**/route.ts`）では`handle(app)`でHonoアプリをエクスポート
+- ルーティングはHonoの`app.route()`や`app.use()`を活用し、botごとに分岐
+- 共通ミドルウェア（署名検証・Webhookパース等）は`src/server/presentations/middleware/`に実装し、`app.use()`で適用
+- API仕様コメントはJSDoc形式で`app.post()`等の直前に記載
+
+## 記載例
+```ts
+// src/server/presentations/line-webhook/index.ts
+const app = new Hono<{ Variables: { rawBody: string } }>()
+  .use('*', createLineWebhookMiddleware())
+  /**
+   * @endpoint POST /api/webhook/line/:channelId
+   * @description LINEのWebhookエンドポイント。チャンネルIDをパラメータとして受け取り、対応するチャンネルのメッセージを処理する
+   */
+  .post('/api/webhook/line/:channelId', async (c) => {
+    const channelId = c.req.param('channelId');
+
+export default app;
+```
+
+## 命名・記法
+- ファイル名・ディレクトリ名はkebab-case
+- Honoの`app`インスタンス名は`app`で統一
+- ミドルウェアは`createXxxMiddleware`で命名
+- presentation層の各ファイル先頭に、対応APIエンドポイントをコメントで明記
+
+## レイヤー間の依存関係
+- 外側のレイヤーは内側のレイヤーに依存
+- 依存性逆転の原則を適用
+- インターフェースを介して通信
+
+
+# レイヤードアーキテクチャ
+## ユースケース（UseCase）実装方針
+
+- ユースケースはオブジェクトリテラル形式でexportする（例：`export const XxxUseCase = { ... }`）
+- メソッド単位でasync関数を定義する（例：`processMessage: async (...) => { ... }`）
+- 依存リポジトリやアダプタは直接importして利用し、引数で渡すDIは原則使わない
+- ユースケース名は「XxxUseCase」とする
+
+## domain層 設計方針
+- モデルはinterface＋クラス（IUser, UserModel等）、不変性・ファクトリメソッド重視
+- リポジトリ/サービスはinterfaceで定義し、ドメインモデルを引数・返り値に使う
+- ドメイン層はビジネスロジック・エンティティ・リポジトリ/サービスIFのみ、インフラ層の実装には依存しない
+- 責務分離を徹底
+
+## Domain層とInfra層の責務分離
+
+- Domain層はビジネスロジック・エンティティ・リポジトリインターフェースのみを持つ
+- Infra層はDBアクセス・外部サービス連携・リポジトリ実装のみを持つ
+- Domain層→Infra層への依存はinterface経由で行い、逆依存は持たない
+
+## infra層 設計方針
+- adapters/: 外部サービスやDB接続のラッパー（MongoAdapter, LineAdapter, OpenAIAdapter等）
+- repositories/: ドメイン層インターフェースを実装するリポジトリ（オブジェクトリテラル形式でexport、DBアクセス・外部サービス連携のみ責務、変換はinfra/mapperで行う）
+- prisma/: PrismaClient, PrismaUserRepository, schema.prisma, migrations等
+- mapper/: DB型⇔ドメイン型の変換（userMapper等）
+- config/: 環境変数や設定
+- アダプタは接続・状態管理を担い、オブジェクトリテラル形式でexport
+- PrismaClientはシングルトン、型は@prisma/clientからimport、変換はmapperで行う
+
+### Prisma利用方針
+- Prismaの型（User, UserCreateInput, UserUpdateInput等）は@prisma/clientからimportして利用する
+- DBから取得した値はUser型（PrismaUser型）として扱い、ドメインモデルへの変換はMapper経由で行う
+- Prismaの自動生成フィールド（id, createdAt, updatedAt）はcreate時に省略し、取得時のみ利用する
+- PrismaClientは開発環境のみシングルトン化し、型は@prisma/clientからimport、変換はmapperで行う
+
+### Mapper設計方針
+#### 責務
+- ドメイン層とインフラ層間の型変換に関するすべての責務を担う
+- ドメイン層は外部の型（DB・外部サービス）を知らない
+- 変換の種類：
+  - DB型 ⇔ ドメイン型
+  - 外部サービスSDKの型 ⇔ ドメイン型
+  - APIレスポンス/リクエスト型 ⇔ ドメイン型
+- ORMによる自動生成型（Prismaを用いてるUserドメインの場合、UserCreateInput, UserUpdateInput等）を返却型として明示し、型安全を担保する
+- MapperはDB型→ドメイン型に変換する関数（toModel）、ドメイン型→Prisma入力型（prismaの場合は`toPrismaCreate`/`toPrismaUpdate`）など用途ごとに明確に分割する
+
+
+#### 命名規則
+- `xxxMapper.ts`の形式（例：`messageMapper.ts`, `userMapper.ts`）
+- 変換メソッドは`toXxx`の形式（例：`toCoreMessages`, `toPrismaUser`）
+
+# セキュリティ
+
+## データ保護
+- 入力値のバリデーション
+- SQLインジェクション対策
+- XSS対策
+
+# パフォーマンス
+
+## キャッシュ戦略
+- 適切なキャッシュヘッダーの設定
+- CDNの活用
+- データベースクエリの最適化
+
+## モニタリング
+- ログの適切な出力
+- エラートレースの実装
+- パフォーマンスメトリクスの収集
+
+
+
