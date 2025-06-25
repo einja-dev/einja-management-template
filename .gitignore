@@ -48,3 +48,6 @@ storybook-static
 
 # claude
 .claude/settings.local.json
+
+# prisma
+prisma/dev.db
