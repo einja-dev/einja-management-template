@@ -1,47 +1,47 @@
-# CLAUDE.md
+# Claude Code 指示書
+- 回答は日本語で行ってください。
+- 必ずこのドキュメントの通りに作業を行ってください。
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## 開発コマンド
 
-## Development Commands
+### 主要な開発コマンド:
+- `npm run dev` - Turbopackで開発サーバーを起動（.nextキャッシュを最初にクリア）
+- `npm run build` - プロダクションビルド（最初にPanda CSS codegenを実行）
+- `npm run start` - プロダクションサーバーを起動
+- `npm run storybook` - Storybookの開発サーバーをポート6006で起動
 
-### Core development commands:
-- `npm run dev` - Start development server with Turbopack (clears .next cache first)
-- `npm run build` - Production build (runs Panda CSS codegen first)
-- `npm run start` - Start production server
-- `npm run storybook` - Start Storybook development server on port 6006
+### コード品質チェックコマンド:
+- `npm run lint` - Biome linterでコードをチェック
+- `npm run lint:fix` - Biomeで自動的にlintの問題を修正
+- `npm run format` - Biomeでコードフォーマットをチェック
+- `npm run format:fix` - Biomeでコードを自動フォーマット
+- `npm run typecheck` - TypeScriptの型チェック
 
-### Code quality commands:
-- `npm run lint` - Check code with Biome linter
-- `npm run lint:fix` - Auto-fix linting issues with Biome
-- `npm run format` - Check code formatting with Biome
-- `npm run format:fix` - Auto-format code with Biome
-- `npm run typecheck` - TypeScript type checking
+### テスト:
+- StorybookとVitest統合でテストを実行
+- Playwrightで Chromiumブラウザーテスト
+- セットアップファイル: `.storybook/vitest.setup.ts`
 
-### Testing:
-- Tests run via Vitest with Storybook integration
-- Browser testing uses Playwright with Chromium
-- Setup files located in `.storybook/vitest.setup.ts`
+## アーキテクチャ
 
-## Architecture
+### スタイリングシステム:
+- **Panda CSS** でデザイントークンとレシピを使用したスタイリング
+- タイプセーフなスタイル生成によるCSS-in-JS
+- スタイルコンポーネントは `styled-system/` ディレクトリに出力
+- カスタムブレークポイント: sm(640px), md(768px), lg(1024px), xl(1280px), 2xl(1440px)
 
-### Styling System:
-- **Panda CSS** for styling with design tokens and recipes
-- CSS-in-JS with type-safe style generation
-- Styled components output to `styled-system/` directory
-- Custom breakpoints: sm(640px), md(768px), lg(1024px), xl(1280px), 2xl(1440px)
+### コード品質:
+- **Biome** でlintingとフォーマット（タブインデント、ダブルクォート）
+- Huskyのpre-commitフックとlint-staged
+- `styled-system/` ディレクトリをフォーマット/lintingから除外
 
-### Code Quality:
-- **Biome** for linting and formatting (tab indentation, double quotes)
-- Husky pre-commit hooks with lint-staged
-- Ignores `styled-system/` directory in formatting/linting
-
-### Framework Setup:
+### フレームワーク設定:
 - Next.js 15 with App Router
 - React 19
-- TypeScript with strict type checking
-- Volta for Node.js version management (v22.16.0)
+- TypeScript（strict型チェック）
+- Voltaまたはfnmを使用したNode.jsバージョン管理 (v22.16.0)
 
-### Special Notes:
-- Always run `panda codegen` before building for production
-- Biome uses tab indentation and double quotes
-- ESLint is disabled during builds (using Biome instead)
+### 特記事項:
+- プロダクションビルド前に必ず`panda codegen`を実行
+- Biomeはタブインデントとダブルクォートを使用
+- ビルド時はESLintを無効化（代わりにBiomeを使用）
