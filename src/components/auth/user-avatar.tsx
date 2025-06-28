@@ -22,8 +22,7 @@ export function UserAvatar({ className = "" }: UserAvatarProps) {
 	if (!session) {
 		return (
 			<div className={`flex gap-2 ${className}`}>
-				<LoginButton provider="google" />
-				<LoginButton provider="github" />
+				<LoginButton provider="credentials" />
 			</div>
 		);
 	}

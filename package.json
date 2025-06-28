@@ -25,7 +25,10 @@
 		"@auth/prisma-adapter": "^2.9.1",
 		"@hookform/resolvers": "^5.1.1",
 		"@prisma/client": "^6.10.1",
+		"@radix-ui/react-label": "^2.1.7",
+		"@radix-ui/react-slot": "^1.2.3",
 		"@tailwindcss/postcss": "^4.1.10",
+		"bcryptjs": "^3.0.2",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"lucide-react": "^0.523.0",
@@ -43,6 +46,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@pandacss/dev": "^0.53.7",
+		"@types/bcryptjs": "^2.4.6",
 		"@types/node": "^22",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",

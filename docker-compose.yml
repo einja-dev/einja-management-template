@@ -1,8 +1,8 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  database:
+  # PostgreSQL Database for local development
+  postgres:
     image: postgres:15-alpine
     container_name: einja-postgres
     restart: unless-stopped
@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -20,27 +20,6 @@ services:
       timeout: 10s
       retries: 5
 
-  # Next.js Application
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: einja-app
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:postgres@database:5432/einja_management?schema=public
-      - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=your-nextauth-secret-key-here
-    depends_on:
-      database:
-        condition: service_healthy
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/.next
 
 volumes:
   postgres_data:

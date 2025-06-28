@@ -11,19 +11,19 @@ export default auth((req) => {
 	);
 
 	// Public routes that authenticated users shouldn't access
-	const publicRoutes = ["/auth/signin", "/auth/signup"];
+	const publicRoutes = ["/signin", "/signup"];
 	const isPublicRoute = publicRoutes.some((route) =>
 		nextUrl.pathname.startsWith(route),
 	);
 
-	// Redirect authenticated users away from public routes
+	// Redirect authenticated users away from public routes to dashboard
 	if (isLoggedIn && isPublicRoute) {
-		return Response.redirect(new URL("/", nextUrl));
+		return Response.redirect(new URL("/dashboard", nextUrl));
 	}
 
-	// Redirect unauthenticated users to sign in
+	// Redirect unauthenticated users to signin
 	if (!isLoggedIn && isProtectedRoute) {
-		return Response.redirect(new URL("/auth/signin", nextUrl));
+		return Response.redirect(new URL("/signin", nextUrl));
 	}
 });
 

@@ -2,32 +2,8 @@
 version: '3.8'
 
 services:
-  # Development configuration for the app
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: deps  # Use deps stage for faster development builds
-    command: npm run dev
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres@database:5432/einja_management?schema=public
-      - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=dev-secret-key-change-in-production
-    volumes:
-      # Mount source code for hot reloading
-      - .:/app
-      - /app/node_modules
-      - /app/.next
-    ports:
-      - "3000:3000"
-    stdin_open: true
-    tty: true
-
-  # Development PostgreSQL with exposed ports for direct access
-  database:
-    ports:
-      - "5432:5432"
+  # Development PostgreSQL configuration
+  postgres:
     environment:
       POSTGRES_DB: einja_management
       POSTGRES_USER: postgres

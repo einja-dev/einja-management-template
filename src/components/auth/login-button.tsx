@@ -3,13 +3,13 @@
 import { signIn } from "next-auth/react";
 
 interface LoginButtonProps {
-	provider?: "google" | "github" | "credentials";
+	provider?: "credentials"; // | "google" | "github" - add when OAuth is enabled
 	children?: React.ReactNode;
 	className?: string;
 }
 
 export function LoginButton({
-	provider = "google",
+	provider = "credentials",
 	children,
 	className = "",
 }: LoginButtonProps) {
@@ -18,9 +18,9 @@ export function LoginButton({
 	};
 
 	const defaultText = {
-		google: "Sign in with Google",
-		github: "Sign in with GitHub",
 		credentials: "Sign in with Email",
+		// google: "Sign in with Google", // add when needed
+		// github: "Sign in with GitHub", // add when needed
 	};
 
 	return (

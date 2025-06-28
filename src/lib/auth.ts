@@ -1,8 +1,6 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import GitHub from "next-auth/providers/github";
-import Google from "next-auth/providers/google";
 import { z } from "zod";
 import { prisma } from "./prisma";
 
@@ -12,16 +10,10 @@ const credentialsSchema = z.object({
 });
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-	adapter: PrismaAdapter(prisma),
+	session: {
+		strategy: "jwt", // Credentialsプロバイダー使用時はJWT戦略が必要
+	},
 	providers: [
-		Google({
-			clientId: process.env.GOOGLE_CLIENT_ID,
-			clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-		}),
-		GitHub({
-			clientId: process.env.GITHUB_CLIENT_ID,
-			clientSecret: process.env.GITHUB_CLIENT_SECRET,
-		}),
 		Credentials({
 			name: "credentials",
 			credentials: {
@@ -32,33 +24,77 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 				try {
 					const { email, password } = credentialsSchema.parse(credentials);
 
-					// TODO: Replace with actual user authentication logic
-					// This is a placeholder implementation
-					if (email === "admin@example.com" && password === "password123") {
-						return {
-							id: "1",
-							email: email,
-							name: "Admin User",
-							image: null,
-						};
+					// データベースからユーザーを検索
+					const user = await prisma.user.findUnique({
+						where: { email },
+						select: {
+							id: true,
+							email: true,
+							name: true,
+							password: true,
+							image: true,
+						},
+					});
+
+					// ユーザーが存在しない場合
+					if (!user || !user.password) {
+						return null;
 					}
 
-					return null;
+					// パスワードを検証
+					const isPasswordValid = await bcrypt.compare(password, user.password);
+					if (!isPasswordValid) {
+						return null;
+					}
+
+					// ユーザー情報を返す（パスワードは除外）
+					return {
+						id: user.id,
+						email: user.email,
+						name: user.name,
+						image: user.image,
+					};
 				} catch (error) {
+					console.error("Authentication error:", error);
 					return null;
 				}
 			},
 		}),
+		// TODO: Add OAuth providers when needed
+		// Google({
+		//   clientId: process.env.AUTH_GOOGLE_ID,
+		//   clientSecret: process.env.AUTH_GOOGLE_SECRET,
+		// }),
+		// GitHub({
+		//   clientId: process.env.AUTH_GITHUB_ID,
+		//   clientSecret: process.env.AUTH_GITHUB_SECRET,
+		// }),
 	],
 	pages: {
-		signIn: "/auth/signin",
+		signIn: "/signin",
 	},
 	callbacks: {
-		async session({ session, user }) {
-			if (session.user) {
-				session.user.id = user.id;
+		async jwt({ token, user }) {
+			// ログイン時にユーザー情報をJWTトークンに保存
+			if (user) {
+				token.id = user.id;
+			}
+			return token;
+		},
+		async session({ session, token }) {
+			// JWTトークンからセッションにユーザー情報を設定
+			if (token) {
+				session.user.id = token.id as string;
 			}
 			return session;
+		},
+		async redirect({ url, baseUrl }) {
+			// サインイン後は常にダッシュボードにリダイレクト
+			if (url.startsWith(baseUrl)) {
+				return url;
+			}
+			// デフォルトはダッシュボード
+			return `${baseUrl}/dashboard`;
 		},
 	},
 });

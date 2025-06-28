@@ -6,7 +6,9 @@
 			"MultiEdit(**)",
 			"Read(**)",
 			"WebFetch",
-			"Bash(npm run *)"
+			"Bash(npm run *)",
+			"Bash(docker-compose *)",
+			"Bash(mv *)"
 		]
 	}
 }

@@ -2,13 +2,41 @@
 - 回答は日本語で行ってください。
 - 必ずこのドキュメントの通りに作業を行ってください。
 
-## 開発コマンド
+## 開発環境セットアップ
+
+### データベース起動（PostgreSQL）:
+```bash
+# PostgreSQLコンテナを起動（ポート5433）
+docker-compose up -d postgres
+
+# データベースの状態確認
+docker-compose ps
+
+# データベース停止
+docker-compose down
+```
+
+**注意**: ローカルのPostgreSQL（ポート5432）と競合を避けるため、Dockerは**ポート5433**を使用します。
+
+### アプリケーション開発:
+```bash
+# 依存関係のインストール
+npm install
+
+# Prismaクライアント生成
+npm run db:generate
+
+# データベースマイグレーション
+npm run db:push
+
+# 開発サーバー起動（Turbopack）
+npm run dev
+```
 
 ### 主要な開発コマンド:
 - `npm run dev` - Turbopackで開発サーバーを起動（.nextキャッシュを最初にクリア）
 - `npm run build` - プロダクションビルド（最初にPanda CSS codegenを実行）
 - `npm run start` - プロダクションサーバーを起動
-- `npm run storybook` - Storybookの開発サーバーをポート6006で起動
 
 ### コード品質チェックコマンド:
 - `npm run lint` - Biome linterでコードをチェック
