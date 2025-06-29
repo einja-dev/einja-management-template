@@ -6,7 +6,7 @@
 
 ### データベース起動（PostgreSQL）:
 ```bash
-# PostgreSQLコンテナを起動（ポート5433）
+# PostgreSQLコンテナを起動（ポート5432）
 docker-compose up -d postgres
 
 # データベースの状態確認
@@ -16,7 +16,7 @@ docker-compose ps
 docker-compose down
 ```
 
-**注意**: ローカルのPostgreSQL（ポート5432）と競合を避けるため、Dockerは**ポート5433**を使用します。
+**注意**: DockerのPostgreSQLは標準ポート**5432**を使用します。
 
 ### アプリケーション開発:
 ```bash

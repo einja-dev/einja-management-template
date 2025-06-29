@@ -8,7 +8,8 @@
 			"WebFetch",
 			"Bash(npm run *)",
 			"Bash(docker-compose *)",
-			"Bash(mv *)"
+			"Bash(mv *)",
+			"Bash(npx shadcn@latest add *)"
 		]
 	}
 }
