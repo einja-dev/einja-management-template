@@ -1,5 +1,6 @@
 import { UserAvatar } from "@/components/auth/user-avatar";
 import Link from "next/link";
+import React from "react";
 import { css } from "../../styled-system/css";
 
 export default function Home() {
