@@ -8,16 +8,11 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { H1, P } from "@/components/ui/typography";
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requireAuth } from "@/lib/auth-guard";
 import { css } from "../../../styled-system/css";
 
 export default async function DashboardPage() {
-	const session = await auth();
-
-	if (!session) {
-		redirect("/signin");
-	}
+	const session = await requireAuth();
 
 	return (
 		<div
