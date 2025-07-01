@@ -1,4 +1,5 @@
 import "./globals.css";
+import { QueryProvider } from "@/components/providers/query-provider";
 import { AuthProvider } from "@/components/providers/session-provider";
 import type { Metadata } from "next";
 
@@ -22,7 +23,9 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<body>
-				<AuthProvider>{children}</AuthProvider>
+				<QueryProvider>
+					<AuthProvider>{children}</AuthProvider>
+				</QueryProvider>
 			</body>
 		</html>
 	);

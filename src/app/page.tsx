@@ -260,6 +260,26 @@ export default function Home() {
 					>
 						ログイン
 					</Link>
+					<Link
+						href="/dashboard"
+						className={css({
+							backgroundColor: "rgba(255, 255, 255, 0.2)",
+							color: "white",
+							padding: { base: "3 6", md: "4 8" },
+							borderRadius: "lg",
+							fontWeight: "semibold",
+							fontSize: { base: "sm", md: "base" },
+							textDecoration: "none",
+							border: "1px solid rgba(255, 255, 255, 0.3)",
+							transition: "all 0.2s",
+							_hover: {
+								backgroundColor: "rgba(255, 255, 255, 0.3)",
+								transform: "translateY(-2px)",
+							},
+						})}
+					>
+						デモを見る
+					</Link>
 				</div>
 			</div>
 		</main>

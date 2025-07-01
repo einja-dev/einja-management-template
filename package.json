@@ -46,6 +46,7 @@
 		"@radix-ui/react-tabs": "^1.1.12",
 		"@radix-ui/react-tooltip": "^1.2.7",
 		"@tailwindcss/postcss": "^4.1.10",
+		"@tanstack/react-query": "^5.81.5",
 		"@tanstack/react-table": "^8.21.3",
 		"bcryptjs": "^3.0.2",
 		"class-variance-authority": "^0.7.1",
