@@ -1,21 +1,27 @@
 import { auth } from "@/lib/auth";
+import type { Session } from "next-auth";
 import { redirect } from "next/navigation";
+import React from "react";
 
 /**
- * 認証が必要なページで使用する高階関数
- * セッションがない場合は/signinにリダイレクトする
+ * 認証が必要なページコンポーネント用の高階関数
+ * セッションを自動的に注入し、未認証時は/signinにリダイレクト
  */
-export function withAuth<T extends unknown[], R>(
-	fn: (...args: T) => Promise<R>,
-): (...args: T) => Promise<R> {
-	return async (...args: T): Promise<R> => {
+export function withAuth<
+	P extends Record<string, unknown> = Record<string, unknown>,
+>(
+	Component: (
+		props: P & { session: Session },
+	) => React.JSX.Element | Promise<React.JSX.Element>,
+) {
+	return async function AuthenticatedComponent(props: P) {
 		const session = await auth();
 
 		if (!session) {
 			redirect("/signin");
 		}
 
-		return fn(...args);
+		return React.createElement(Component, { ...props, session });
 	};
 }
 
