@@ -73,3 +73,10 @@ npm run dev
 - プロダクションビルド前に必ず`panda codegen`を実行
 - Biomeはタブインデントとダブルクォートを使用
 - ビルド時はESLintを無効化（代わりにBiomeを使用）
+
+## 追加指示
+
+以下のドキュメントも参照して作業を進めてください:
+
+- @docs/component-design.mdc - コンポーネント設計ガイドライン
+- @docs/github-workflow.mdc - GitHubワークフロー・ブランチ戦略
