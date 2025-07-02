@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { HamburgerMenuIcon } from "@radix-ui/react-icons";
 import { css } from "../../../styled-system/css";
 import { hstack, vstack } from "../../../styled-system/patterns";
 
@@ -12,9 +14,10 @@ interface HeaderProps {
 				image?: string | null;
 		  }
 		| undefined;
+	onMobileMenuToggle?: () => void;
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user, onMobileMenuToggle }: HeaderProps) {
 	return (
 		<header
 			className={css({
@@ -42,6 +45,24 @@ export function Header({ user }: HeaderProps) {
 				>
 					{/* ロゴ・ブランド */}
 					<div className={hstack({ gap: "0.75rem", alignItems: "center" })}>
+						{/* Mobile menu button */}
+						{onMobileMenuToggle && (
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={onMobileMenuToggle}
+								className={css({
+									display: { base: "flex", md: "none" },
+									padding: "0.5rem",
+									marginRight: "0.5rem",
+								})}
+								aria-label="メニューを開く"
+							>
+								<HamburgerMenuIcon
+									className={css({ width: "1.25rem", height: "1.25rem" })}
+								/>
+							</Button>
+						)}
 						<div
 							className={css({
 								width: "2.5rem",
