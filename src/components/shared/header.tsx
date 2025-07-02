@@ -1,7 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { signOut } from "next-auth/react";
 import { css } from "../../../styled-system/css";
 import { hstack, vstack } from "../../../styled-system/patterns";
 
@@ -17,10 +15,6 @@ interface HeaderProps {
 }
 
 export function Header({ user }: HeaderProps) {
-	const handleSignOut = async () => {
-		await signOut({ callbackUrl: "/signin" });
-	};
-
 	return (
 		<header
 			className={css({
@@ -81,7 +75,7 @@ export function Header({ user }: HeaderProps) {
 						</h1>
 					</div>
 
-					{/* ユーザー情報・ログアウト */}
+					{/* ユーザー情報 */}
 					<div className={hstack({ gap: "1rem", alignItems: "center" })}>
 						<div
 							className={vstack({
@@ -146,24 +140,6 @@ export function Header({ user }: HeaderProps) {
 								</span>
 							)}
 						</div>
-
-						<Button
-							onClick={handleSignOut}
-							variant="outline"
-							className={css({
-								fontSize: "sm",
-								padding: "0.5rem 1rem",
-								border: "1px solid {colors.gray.300}",
-								background: "white",
-								color: "{colors.gray.700}",
-								_hover: {
-									background: "{colors.gray.50}",
-									borderColor: "{colors.gray.400}",
-								},
-							})}
-						>
-							ログアウト
-						</Button>
 					</div>
 				</div>
 			</div>
