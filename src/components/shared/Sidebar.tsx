@@ -18,6 +18,8 @@ import { useEffect, useState } from "react";
 
 interface SidebarProps {
 	className?: string;
+	isMobileOpen: boolean;
+	setIsMobileOpen: (open: boolean) => void;
 }
 
 const navigationItems = [
@@ -38,8 +40,11 @@ const navigationItems = [
 	},
 ];
 
-export function Sidebar({ className }: SidebarProps) {
-	const [isMobileOpen, setIsMobileOpen] = useState(false);
+export function Sidebar({
+	className,
+	isMobileOpen,
+	setIsMobileOpen,
+}: SidebarProps) {
 	const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(() => {
 		// ローカルストレージから状態を復元（SSR対応）
 		if (typeof window !== "undefined") {
@@ -58,7 +63,6 @@ export function Sidebar({ className }: SidebarProps) {
 		);
 	}, [isDesktopCollapsed]);
 
-	const toggleMobile = () => setIsMobileOpen(!isMobileOpen);
 	const toggleDesktop = () => setIsDesktopCollapsed(!isDesktopCollapsed);
 
 	const handleSignOut = async () => {
@@ -67,37 +71,6 @@ export function Sidebar({ className }: SidebarProps) {
 
 	return (
 		<>
-			{/* Mobile toggle button */}
-			<Button
-				variant="ghost"
-				size="icon"
-				className="fixed top-4 left-4 z-50 md:hidden"
-				onClick={toggleMobile}
-				aria-label="メニューを開く"
-			>
-				<HamburgerMenuIcon className="h-5 w-5" />
-			</Button>
-
-			{/* Desktop toggle button */}
-			<Button
-				variant="ghost"
-				size="icon"
-				className={cn(
-					"fixed top-4 z-50 hidden md:flex transition-all duration-300",
-					isDesktopCollapsed ? "left-4" : "left-60",
-				)}
-				onClick={toggleDesktop}
-				aria-label={
-					isDesktopCollapsed ? "サイドバーを展開" : "サイドバーを折りたたむ"
-				}
-			>
-				{isDesktopCollapsed ? (
-					<ChevronRightIcon className="h-4 w-4" />
-				) : (
-					<ChevronLeftIcon className="h-4 w-4" />
-				)}
-			</Button>
-
 			{/* Overlay for mobile */}
 			{isMobileOpen && (
 				// biome-ignore lint/a11y/useKeyWithClickEvents: サイドメニューのオーバーレイ
@@ -124,9 +97,30 @@ export function Sidebar({ className }: SidebarProps) {
 				<div className="flex h-full flex-col">
 					{/* Header */}
 					<div className="flex items-center justify-between border-b p-4">
-						{!isDesktopCollapsed && (
-							<h2 className="text-lg font-semibold">管理システム</h2>
-						)}
+						<div className="flex items-center gap-2">
+							{!isDesktopCollapsed && (
+								<h2 className="text-lg font-semibold">管理システム</h2>
+							)}
+							{/* Desktop collapse toggle - integrated in sidebar header */}
+							<Button
+								variant="ghost"
+								size="icon"
+								className="hidden md:flex"
+								onClick={toggleDesktop}
+								aria-label={
+									isDesktopCollapsed
+										? "サイドバーを展開"
+										: "サイドバーを折りたたむ"
+								}
+							>
+								{isDesktopCollapsed ? (
+									<ChevronRightIcon className="h-4 w-4" />
+								) : (
+									<ChevronLeftIcon className="h-4 w-4" />
+								)}
+							</Button>
+						</div>
+						{/* Mobile close button */}
 						<Button
 							variant="ghost"
 							size="icon"
