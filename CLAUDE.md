@@ -81,3 +81,4 @@ npm run dev
 - @docs/component-design.mdc - コンポーネント設計ガイドライン
 - @docs/github-workflow.mdc - GitHubワークフロー・ブランチ戦略
 - @docs/testing.mdc - Vitestを使用したテスト戦略とベストプラクティス
+- @docs/code-review.mdc - コードレビューのガイドライン
