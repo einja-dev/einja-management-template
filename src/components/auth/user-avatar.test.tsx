@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import type { Session } from "next-auth";
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
-import { UserAvatar } from "../auth/user-avatar";
+import { UserAvatar } from "./user-avatar";
 
 // next-authのuseSessionをモック
 vi.mock("next-auth/react", () => ({
@@ -10,12 +10,12 @@ vi.mock("next-auth/react", () => ({
 }));
 
 // LoginButtonコンポーネントをモック
-vi.mock("../auth/login-button", () => ({
+vi.mock("./login-button", () => ({
 	LoginButton: () => <button type="button">ログイン</button>,
 }));
 
 // LogoutButtonコンポーネントをモック
-vi.mock("../auth/logout-button", () => ({
+vi.mock("./logout-button", () => ({
 	LogoutButton: () => <button type="button">ログアウト</button>,
 }));
 

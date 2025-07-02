@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
-import Home from "../page";
+import Home from "./page";
 
 // UserAvatarコンポーネントをモック
 vi.mock("@/components/auth/user-avatar", () => ({
