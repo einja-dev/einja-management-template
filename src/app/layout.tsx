@@ -5,14 +5,10 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
 	title: {
-		default: "Corporate Site",
-		template: "%s | Corporate Site",
+		default: "管理システム",
+		template: "%s | 管理システム",
 	},
-	description:
-		"Next.js corporate site boilerplate with modern development tools",
-	verification: {
-		google: "your-google-site-verification",
-	},
+	description: "管理システム",
 };
 
 export default function RootLayout({
