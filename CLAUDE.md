@@ -78,6 +78,7 @@ npm run dev
 
 以下のドキュメントも参照して作業を進めてください:
 
+- @docs/coding-standards.mdc - コーディング規約
 - @docs/component-design.mdc - コンポーネント設計ガイドライン
 - @docs/github-workflow.mdc - GitHubワークフロー・ブランチ戦略
 - @docs/testing.mdc - Vitestを使用したテスト戦略とベストプラクティス
