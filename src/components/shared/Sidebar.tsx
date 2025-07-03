@@ -10,6 +10,7 @@ import {
 	HamburgerMenuIcon,
 	HomeIcon,
 	PersonIcon,
+	TableIcon,
 } from "@radix-ui/react-icons";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -32,6 +33,11 @@ const navigationItems = [
 		title: "ダッシュボード",
 		href: "/dashboard",
 		icon: DashboardIcon,
+	},
+	{
+		title: "データ管理",
+		href: "/data",
+		icon: TableIcon,
 	},
 	{
 		title: "プロフィール",
