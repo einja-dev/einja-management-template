@@ -5,9 +5,10 @@ module.exports = {
 	// Biomeによるリントとフォーマット（CLAUDE.mdを除外）
 	"**/*.{js,jsx,ts,tsx,json}": ["npm run lint:fix", "npm run format:fix"],
 	"**/*.md": (filenames) => {
-		// CLAUDE.mdを除外
+		// CLAUDE.mdと.claudeディレクトリを除外
 		const filteredFiles = filenames.filter(
-			(filename) => !filename.includes("CLAUDE.md"),
+			(filename) =>
+				!filename.includes("CLAUDE.md") && !filename.includes(".claude/"),
 		);
 		if (filteredFiles.length === 0) return [];
 		return [
