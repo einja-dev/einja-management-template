@@ -2,6 +2,31 @@
 - 回答は日本語で行ってください。
 - 必ずこのドキュメントの通りに作業を行ってください。
 
+## プロジェクト構成
+
+このプロジェクトは**Turborepo**を使用したモノレポ構成になっています。
+
+```
+einja-management-template/
+├── apps/
+│   └── web/                      # メイン管理画面アプリ
+│       ├── src/
+│       │   ├── app/              # Next.js App Router
+│       │   ├── components/        # アプリ固有のコンポーネント
+│       │   └── lib/              # アプリ固有のユーティリティ
+│       ├── package.json
+│       └── tsconfig.json
+├── packages/
+│   ├── config/                   # 共通設定（Biome, TypeScript, Panda CSS）
+│   ├── types/                    # 共通型定義
+│   ├── database/                 # Prismaスキーマとクライアント
+│   ├── auth/                     # NextAuth設定と認証ロジック
+│   └── ui/                       # 共通UIコンポーネント（shadcn/ui）
+├── turbo.json                    # Turborepoの設定
+├── pnpm-workspace.yaml          # pnpmワークスペース設定
+└── package.json                  # ルートpackage.json
+```
+
 ## 開発環境セットアップ
 
 ### データベース起動（PostgreSQL）:
@@ -20,42 +45,57 @@ docker-compose down
 
 ### アプリケーション開発:
 ```bash
-# 依存関係のインストール
-npm install
+# 依存関係のインストール（pnpm使用）
+pnpm install
 
 # Prismaクライアント生成
-npm run db:generate
+pnpm db:generate
 
 # データベースマイグレーション
-npm run db:push
+pnpm db:push
 
-# 開発サーバー起動（Turbopack）
-npm run dev
+# 開発サーバー起動（Turbopack + Turborepo）
+pnpm dev
 ```
 
 ### 主要な開発コマンド:
-- `npm run dev` - Turbopackで開発サーバーを起動（.nextキャッシュを最初にクリア）
-- `npm run build` - プロダクションビルド（最初にPanda CSS codegenを実行）
-- `npm run start` - プロダクションサーバーを起動
+- `pnpm dev` - 全アプリの開発サーバーを起動（Turborepo並列実行）
+- `pnpm build` - 全アプリのプロダクションビルド
+- `pnpm start` - プロダクションサーバーを起動
 
 ### コード品質チェックコマンド:
-- `npm run lint` - Biome linterでコードをチェック
-- `npm run lint:fix` - Biomeで自動的にlintの問題を修正
-- `npm run format` - Biomeでコードフォーマットをチェック
-- `npm run format:fix` - Biomeでコードを自動フォーマット
-- `npm run typecheck` - TypeScriptの型チェック
+- `pnpm lint` - Biome linterでコードをチェック（全ワークスペース）
+- `pnpm lint:fix` - Biomeで自動的にlintの問題を修正
+- `pnpm format` - Biomeでコードフォーマットをチェック
+- `pnpm format:fix` - Biomeでコードを自動フォーマット
+- `pnpm typecheck` - TypeScriptの型チェック（全ワークスペース）
 
 ### テスト:
-- StorybookとVitest統合でテストを実行
+- `pnpm test` - Vitestでテスト実行（全ワークスペース）
+- `pnpm test:watch` - Vitestウォッチモード
+- `pnpm test:ui` - Vitest UIモード
+- `pnpm test:coverage` - カバレッジ付きテスト
 - Playwrightで Chromiumブラウザーテスト
-- セットアップファイル: `.storybook/vitest.setup.ts`
 
 ## アーキテクチャ
+
+### モノレポ構成:
+- **Turborepo** による高速ビルド・タスク実行
+- **pnpm workspaces** によるパッケージ管理
+- ワークスペース間の依存関係管理
+
+### パッケージ構成:
+- `@einja/config` - 共通設定（Biome, TypeScript, Panda CSS）
+- `@einja/types` - 型定義（NextAuth型拡張など）
+- `@einja/database` - Prismaクライアントとスキーマ
+- `@einja/auth` - NextAuth設定と認証ガード
+- `@einja/ui` - 共通UIコンポーネント（shadcn/ui）
+- `@einja/web` - メイン管理画面アプリケーション
 
 ### スタイリングシステム:
 - **Panda CSS** でデザイントークンとレシピを使用したスタイリング
 - タイプセーフなスタイル生成によるCSS-in-JS
-- スタイルコンポーネントは `styled-system/` ディレクトリに出力
+- スタイルコンポーネントは `apps/web/src/styled-system/` ディレクトリに出力
 - カスタムブレークポイント: sm(640px), md(768px), lg(1024px), xl(1280px), 2xl(1440px)
 
 ### コード品質:
@@ -67,12 +107,41 @@ npm run dev
 - Next.js 15 with App Router
 - React 19
 - TypeScript（strict型チェック）
+- pnpmによるパッケージ管理
 - Voltaまたはfnmを使用したNode.jsバージョン管理 (v22.16.0)
 
 ### 特記事項:
 - プロダクションビルド前に必ず`panda codegen`を実行
 - Biomeはタブインデントとダブルクォートを使用
 - ビルド時はESLintを無効化（代わりにBiomeを使用）
+- Turborepoのキャッシュ機能で高速ビルド
+
+## インポートパスの規約
+
+### パッケージ間のインポート
+```typescript
+// 認証機能
+import { auth, signIn, signOut } from "@einja/auth";
+import { requireAuth, withAuth } from "@einja/auth/guard";
+
+// データベース
+import { prisma, User, Post } from "@einja/database";
+
+// UIコンポーネント
+import { Button } from "@einja/ui/button";
+import { Card } from "@einja/ui/card";
+import { cn } from "@einja/ui/utils";
+
+// 型定義
+import type { Session } from "@einja/types/next-auth";
+```
+
+### アプリ内のインポート
+```typescript
+// apps/web内では従来通り@/を使用
+import { Component } from "@/components/...";
+import { helper } from "@/lib/...";
+```
 
 ## 追加指示
 

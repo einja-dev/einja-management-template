@@ -1,0 +1,15 @@
+{
+	"name": "@einja/config",
+	"version": "0.1.0",
+	"private": true,
+	"exports": {
+		"./biome": "./biome.json",
+		"./typescript": "./tsconfig.json",
+		"./panda": "./panda.config.ts"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@pandacss/dev": "^0.53.7",
+		"typescript": "^5"
+	}
+}

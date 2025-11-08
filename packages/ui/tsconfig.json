@@ -1,0 +1,13 @@
+{
+	"extends": "@einja/config/typescript",
+	"compilerOptions": {
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"jsx": "react-jsx",
+		"paths": {
+			"@/lib/*": ["./src/lib/*"]
+		}
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "dist"]
+}
