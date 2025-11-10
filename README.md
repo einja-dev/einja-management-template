@@ -1,99 +1,260 @@
 # einja-management-template
-いいんじゃ管理画面テンプレート
 
-## Docker を使用した開発環境の構築
+いいんじゃ管理画面テンプレート - Turborepo + pnpm モノレポ構成
 
-### 前提条件
-- Docker
-- Docker Compose
+## プロジェクト構成
 
-### 開発環境の起動
+このプロジェクトは**Turborepo**を使用したモノレポ構成です。
 
-1. **リポジトリをクローン**
-   ```bash
-   git clone <repository-url>
-   cd einja-management-template
-   ```
+```
+einja-management-template/
+├── apps/
+│   └── web/                      # メイン管理画面アプリ
+│       ├── src/
+│       │   ├── app/              # Next.js App Router
+│       │   ├── components/        # アプリ固有のコンポーネント
+│       │   └── lib/              # アプリ固有のユーティリティ
+│       ├── package.json
+│       └── tsconfig.json
+├── packages/
+│   ├── config/                   # 共通設定（Biome, TypeScript, Panda CSS）
+│   ├── types/                    # 共通型定義
+│   ├── database/                 # Prismaスキーマとクライアント
+│   ├── auth/                     # NextAuth設定と認証ロジック
+│   └── ui/                       # 共通UIコンポーネント（shadcn/ui）
+├── turbo.json                    # Turborepoの設定
+├── pnpm-workspace.yaml          # pnpmワークスペース設定
+└── package.json                  # ルートpackage.json
+```
 
-2. **環境変数を設定**
-   ```bash
-   cp .env.example .env
-   # .envファイルを編集して適切な値を設定
-   ```
+## 技術スタック
 
-3. **Docker Composeで起動**
-   ```bash
-   # データベースとアプリケーションを起動
-   docker-compose up -d
-   
-   # または開発モードで起動（ホットリロード有効）
-   docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d
-   ```
+- **モノレポ**: Turborepo + pnpm workspaces
+- **フレームワーク**: Next.js 15 (App Router)
+- **言語**: TypeScript (strict mode)
+- **スタイリング**: Panda CSS
+- **UI**: shadcn/ui + Radix UI
+- **データベース**: PostgreSQL + Prisma
+- **認証**: NextAuth.js v5
+- **状態管理**: TanStack Query (React Query)
+- **テスト**: Vitest + React Testing Library + Playwright
+- **Linter/Formatter**: Biome
+- **Git Hooks**: Husky + lint-staged
 
-4. **データベースマイグレーション**
-   ```bash
-   # コンテナ内でマイグレーションを実行
-   docker-compose exec app npm run db:push
-   ```
+## 前提条件
 
-5. **アプリケーションにアクセス**
-   - アプリケーション: http://localhost:3000
-   - Prisma Studio: http://localhost:5555 (別途 `docker-compose exec app npm run db:studio` で起動)
+- Node.js 22.16.0 (Voltaまたはfnm推奨)
+- pnpm 10.14.0
+- Docker & Docker Compose
+- PostgreSQL 15 (ローカル開発の場合)
+
+## 開発環境セットアップ
+
+### 1. リポジトリをクローン
+
+```bash
+git clone <repository-url>
+cd einja-management-template
+```
+
+### 2. 依存関係のインストール
+
+```bash
+pnpm install
+```
+
+### 3. データベース起動（PostgreSQL）
+
+```bash
+# PostgreSQLコンテナを起動（ポート5433）
+docker-compose up -d postgres
+
+# データベースの状態確認
+docker-compose ps
+
+# データベース停止
+docker-compose down
+```
+
+**注意**: DockerのPostgreSQLは**ポート5433**を使用します。
+
+### 4. Prismaセットアップ
+
+```bash
+# Prismaクライアント生成
+pnpm db:generate
+
+# データベースマイグレーション
+pnpm db:push
+```
+
+### 5. Panda CSSのコード生成
+
+```bash
+pnpm --filter @einja/web panda codegen
+```
+
+### 6. 開発サーバー起動
+
+```bash
+# 全アプリの開発サーバーを起動（Turborepo並列実行）
+pnpm dev
+```
+
+アプリケーション: http://localhost:3000
+
+## 主要コマンド
+
+### 開発
+
+```bash
+pnpm dev              # 全アプリの開発サーバーを起動
+pnpm build            # 全アプリのプロダクションビルド
+pnpm start            # プロダクションサーバーを起動
+```
+
+### コード品質
+
+```bash
+pnpm lint             # Biome linterでコードをチェック
+pnpm lint:fix         # Biomeで自動的にlintの問題を修正
+pnpm format           # Biomeでコードフォーマットをチェック
+pnpm format:fix       # Biomeでコードを自動フォーマット
+pnpm typecheck        # TypeScriptの型チェック
+```
+
+### テスト
+
+```bash
+pnpm test             # Vitestでテスト実行
+pnpm test:watch       # Vitestウォッチモード
+pnpm test:ui          # Vitest UIモード
+pnpm test:coverage    # カバレッジ付きテスト
+```
+
+### データベース
+
+```bash
+pnpm db:generate      # Prismaクライアント生成
+pnpm db:push          # データベースマイグレーション
+pnpm db:migrate       # マイグレーションファイル作成＆実行
+pnpm db:studio        # Prisma Studio起動
+```
+
+### ワークスペース固有のコマンド
+
+```bash
+# 特定のワークスペースでコマンド実行
+pnpm --filter @einja/web dev
+pnpm --filter @einja/web build
+pnpm --filter @einja/web panda codegen
+```
+
+## データベース設定
 
 ### Docker Compose サービス
 
-- **database**: PostgreSQL 15
-  - ポート: 5432
+- **postgres**: PostgreSQL 15
+  - ポート: **5433** (ホスト) → 5432 (コンテナ)
   - データベース: `einja_management`
   - ユーザー: `postgres`
   - パスワード: `postgres`
-
-- **app**: Next.js アプリケーション
-  - ポート: 3000
-  - 本番環境とほぼ同等の設定
 
 ### 便利なコマンド
 
 ```bash
 # ログを確認
-docker-compose logs -f app
-
-# コンテナに入る
-docker-compose exec app sh
+docker-compose logs -f postgres
 
 # データベースに直接接続
-docker-compose exec database psql -U postgres -d einja_management
+docker-compose exec postgres psql -U postgres -d einja_management
 
 # データベースをリセット
 docker-compose down -v
-docker-compose up -d
+docker-compose up -d postgres
+pnpm db:push
 
 # Prisma Studio を起動
-docker-compose exec app npm run db:studio
+pnpm db:studio
 ```
 
-### 開発ワークフロー
+## ディレクトリ構造の詳細
 
-1. コードを変更
-2. ホットリロードで即座に反映
-3. データベーススキーマを変更した場合は `npm run db:push`
-4. 本番ビルドをテストする場合は `docker-compose build`
+### apps/web
 
-## ローカル開発（Docker なし）
+メイン管理画面アプリケーション
+
+- **src/app**: Next.js App Router（ページ、レイアウト、API）
+- **src/components**: アプリ固有のコンポーネント
+  - `ui/`: 基本的なUIコンポーネント
+  - `shared/`: 共通コンポーネント（Header, Sidebarなど）
+- **src/lib**: ユーティリティ、認証設定など
+
+### packages
+
+- **@einja/config**: Biome, TypeScript, Panda CSSの共通設定
+- **@einja/types**: 型定義（NextAuth型拡張など）
+- **@einja/database**: Prismaクライアントとスキーマ
+- **@einja/auth**: NextAuth設定と認証ガード
+- **@einja/ui**: 共通UIコンポーネント（shadcn/ui）
+
+## 開発ワークフロー
+
+1. ブランチを作成
+2. コードを変更
+3. ホットリロードで即座に反映
+4. データベーススキーマを変更した場合は `pnpm db:push`
+5. Panda CSSのスタイル変更時は自動生成される
+6. コミット前に自動的にlint-stagedが実行される
+7. プルリクエストを作成
+
+## トラブルシューティング
+
+### Panda CSS関連エラー
 
 ```bash
-# 依存関係をインストール
-npm install
-
-# PostgreSQLを起動（別途インストールが必要）
-brew services start postgresql@15
-
-# 環境変数を設定
-cp .env.example .env
-
-# データベースマイグレーション
-npm run db:push
-
-# 開発サーバーを起動
-npm run dev
+# styled-systemを再生成
+pnpm --filter @einja/web panda codegen
 ```
+
+### Prisma関連エラー
+
+```bash
+# Prismaクライアントを再生成
+pnpm db:generate
+
+# データベースをリセット
+docker-compose down -v
+docker-compose up -d postgres
+pnpm db:push
+```
+
+### 依存関係の問題
+
+```bash
+# node_modulesをクリーンアップ
+rm -rf node_modules apps/*/node_modules packages/*/node_modules
+rm pnpm-lock.yaml
+pnpm install
+```
+
+### Turborepoキャッシュのクリア
+
+```bash
+# .turboディレクトリを削除
+rm -rf .turbo apps/*/.turbo packages/*/.turbo
+```
+
+## コーディング規約
+
+詳細は以下のドキュメントを参照してください：
+
+- [コーディング規約](./docs/coding-standards.mdc)
+- [コンポーネント設計ガイドライン](./docs/component-design.mdc)
+- [テスト戦略](./docs/testing.mdc)
+- [コードレビューガイドライン](./docs/code-review.mdc)
+- [GitHubワークフロー](./docs/github-workflow.mdc)
+
+## ライセンス
+
+Proprietary
