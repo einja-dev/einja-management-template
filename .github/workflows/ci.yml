@@ -32,7 +32,15 @@ jobs:
         run: pnpm db:generate
 
       - name: Generate Panda CSS
-        run: pnpm --filter @einja/web panda codegen
+        run: |
+          pnpm --filter @einja/web panda
+          # Panda CSS生成確認
+          if [ ! -d "apps/web/styled-system" ]; then
+            echo "Error: styled-system directory was not created"
+            exit 1
+          fi
+          echo "Panda CSS generated successfully"
+          ls -la apps/web/styled-system
 
       - name: Run TypeScript type check
         run: pnpm typecheck

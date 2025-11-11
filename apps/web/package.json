@@ -6,6 +6,7 @@
 		"dev": "rm -rf .next && next dev --turbopack",
 		"build": "panda codegen && next build",
 		"start": "next start",
+		"panda": "panda codegen",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write",
 		"format": "biome format .",
