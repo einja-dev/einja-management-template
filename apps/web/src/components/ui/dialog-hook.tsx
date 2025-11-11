@@ -165,7 +165,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
 			{children}
 			<Dialog
 				open={dialogState.isOpen}
-				onOpenChange={(open) => !open && closeDialog()}
+				onOpenChange={(open: boolean) => !open && closeDialog()}
 			>
 				<DialogContent showCloseButton={dialogState.showCloseButton}>
 					{dialogState.content ? (

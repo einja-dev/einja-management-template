@@ -14,12 +14,16 @@
 		"@einja/database": "workspace:*",
 		"@einja/types": "workspace:*",
 		"bcryptjs": "^3.0.2",
+		"next": "15.3.3",
 		"next-auth": "^5.0.0-beta.28",
+		"react": "^19.2.0",
 		"zod": "^3.25.76"
 	},
 	"devDependencies": {
 		"@einja/config": "workspace:*",
 		"@types/bcryptjs": "^2.4.6",
+		"@types/node": "^22.18.13",
+		"@types/react": "^19.2.2",
 		"typescript": "^5"
 	}
 }
